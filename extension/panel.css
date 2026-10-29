@@ -358,3 +358,10 @@ footer {
   color: var(--muted);
   font-size: 11px;
 }
+
+/* 在寬視窗預覽（例如用分頁打開）時模擬側邊欄寬度；真正的 side panel 不受影響 */
+@media (min-width: 500px) {
+  body {
+    max-width: 420px;
+  }
+}

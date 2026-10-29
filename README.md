@@ -1,5 +1,15 @@
 # DSH Bridge v2.1 — Edge 全能助手
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Edge 114+](https://img.shields.io/badge/Edge-114%2B-blue)](https://www.microsoft.com/edge)
+[![Version](https://img.shields.io/badge/version-2.1.2-success)](extension/manifest.json)
+
+<p align="center">
+  <img src="docs/screenshot-panel.png" width="300" alt="DSH 側邊欄：讀頁、截圖、收件匣、DSH 對話">
+  &nbsp;&nbsp;
+  <img src="docs/screenshot-popup.png" width="210" alt="DSH Edge Assistant popup">
+</p>
+
 把 Edge 接到 DeepSeek Harness：不只匯出 cookie，還能讓我**讀頁面、截圖、操作瀏覽器、
 管理分頁、查歷史書籤下載**。v2.1 起補上 Kimi 瀏覽器擴充同等級的能力：CDP 真實點擊／
 打字、無障礙樹、可點元素清單、滾動全文、網路與 Console、iframe、側邊欄、劃詞、

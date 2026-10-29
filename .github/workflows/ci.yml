@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: JS syntax
+        run: |
+          node --check extension/background.js
+          node --check extension/panel.js
+          node --check extension/popup.js
+          node --check extension/content/recorder.js
+          node --check dsh-plugin/index.js
+          node --check test/extension-logic.test.js
+
+      - name: Manifest JSON
+        run: node -e "const m=JSON.parse(require('fs').readFileSync('extension/manifest.json','utf8')); if(!m.version) process.exit(1)"
+
+      - name: Extension logic tests
+        run: node test/extension-logic.test.js
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Python compile
+        run: |
+          python -m py_compile server/bridge.py server/bridge_server.py server/bridge_daemon.py scripts/fetch-media.py
+
+      - name: Sensitive data guard
+        run: |
+          if [ -d data ] || [ -d downloads ]; then
+            echo "data/ or downloads/ should never be committed" >&2
+            exit 1
+          fi
