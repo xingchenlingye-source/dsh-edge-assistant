@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="panel.css" />
+    <title>DSH Edge 助手</title>
+  </head>
+  <body>
+    <header>
+      <span class="logo">DSH</span>
+      <span class="title">Edge 助手</span>
+      <span id="dot" class="dot off" title="bridge 連線"></span>
+    </header>
+
+    <section class="site">
+      <div class="label">目前分頁</div>
+      <div id="host" class="host">—</div>
+      <div id="pagetitle" class="pagetitle"></div>
+    </section>
+
+    <label class="row">
+      <input type="checkbox" id="control" />
+      <span>允許 agent 操作此瀏覽器</span>
+    </label>
+
+    <div class="actions">
+      <button id="read" class="primary">讀取此頁（滾動全文）</button>
+      <div class="grid">
+        <button id="shot" class="secondary">截圖</button>
+        <button id="send" class="secondary">送給 DSH</button>
+      </div>
+      <div class="grid">
+        <button id="ax" class="secondary">頁面結構</button>
+        <button id="rec" class="secondary">開始錄製</button>
+      </div>
+    </div>
+
+    <div id="msg" class="msg"></div>
+
+    <section class="box">
+      <div class="boxhead">
+        <span>收件匣 <span id="inboxCount" class="badge">0</span></span>
+        <button id="clearInbox" class="mini">清除</button>
+      </div>
+      <div id="inbox" class="list">—</div>
+    </section>
+
+    <section class="box">
+      <div class="boxhead"><span>最近指令</span></div>
+      <div id="recent" class="list">—</div>
+    </section>
+
+    <pre id="output" class="output" hidden></pre>
+
+    <section class="chat">
+      <div class="chattop">
+        <span>DSH 對話</span>
+        <span id="chatState" class="chatstate">檢查中…</span>
+      </div>
+      <div id="chatList" class="chatlist"></div>
+      <div class="chatform">
+        <textarea id="chatInput" rows="2" placeholder="跟這個 DSH 會話說…（Enter 送出、Shift+Enter 換行）"></textarea>
+        <button id="chatSend" class="primary">送出</button>
+      </div>
+    </section>
+
+    <footer><span id="bridge">bridge: 檢查中…</span></footer>
+
+    <script src="panel.js"></script>
+  </body>
+</html>

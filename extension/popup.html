@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+    <title>DSH Edge Assistant</title>
+  </head>
+  <body>
+    <header>
+      <span class="logo">DSH</span>
+      <span class="title">Edge 助手</span>
+      <span id="wsDot" class="dot off" title="bridge 連線"></span>
+    </header>
+
+    <section class="site">
+      <div class="label">目前網站</div>
+      <div id="host" class="host">—</div>
+      <div id="pagetitle" class="pagetitle"></div>
+    </section>
+
+    <div class="actions">
+      <button id="send" class="primary">同步 Cookie 給 DSH</button>
+      <button id="download" class="secondary">下載 cookies.txt</button>
+      <button id="panel" class="secondary">開啟側邊欄（讀頁 / 截圖 / 收件匣）</button>
+    </div>
+
+    <section class="control">
+      <label class="row">
+        <input type="checkbox" id="controlToggle" />
+        <span>允許 agent 操作此瀏覽器</span>
+      </label>
+      <div class="hint">
+        開啟後 agent 才能點擊、輸入、執行 JS、開關分頁；讀取頁面與截圖永遠可用。
+      </div>
+    </section>
+
+    <div id="msg" class="msg"></div>
+
+    <footer>
+      <span id="bridgeInfo">bridge: 檢查中…</span>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

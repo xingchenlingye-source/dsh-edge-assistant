@@ -1,0 +1,4 @@
+- insert:
+    - id: browser-chat
+      name: '@local/dsh-browser-chat'
+      config: {}

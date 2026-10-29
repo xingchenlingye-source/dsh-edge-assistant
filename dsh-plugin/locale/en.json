@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Browser Chat Bridge",
+    "description": "Local HTTP/SSE bridge that lets the Edge sidebar send prompts to a DSH session and stream the reply back."
+  }
+}

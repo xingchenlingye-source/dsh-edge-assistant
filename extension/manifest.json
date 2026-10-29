@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "DSH Edge Assistant — 瀏覽器接入 DeepSeek Harness",
+  "version": "2.1.2",
+  "description": "把 Edge 交給 agent：CDP 級點擊/打字/截圖、無障礙樹、滾動全文、網路與 Console、iframe、側邊欄、劃詞、錄製。只連本機 127.0.0.1。",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "activeTab",
+    "downloads",
+    "storage",
+    "alarms",
+    "scripting",
+    "history",
+    "bookmarks",
+    "debugger",
+    "sidePanel",
+    "tabGroups",
+    "webNavigation",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/recorder.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DSH Edge Assistant",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

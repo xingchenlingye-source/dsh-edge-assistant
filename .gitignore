@@ -1,0 +1,25 @@
+# 執行期資料（含 cookie 登入憑證，絕對不要提交）
+data/
+downloads/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# 日誌 / 暫存
+*.log
+*.tmp
+*.bak
+
+# 編輯器 / 系統
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 本機設定
+.env
+*.local

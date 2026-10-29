@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "瀏覽器側邊欄對話橋",
+    "description": "本機 HTTP/SSE 橋接：讓 Edge 側邊欄對 DSH 會話下指令，並即時看到回覆。"
+  }
+}
