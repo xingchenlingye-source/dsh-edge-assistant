@@ -2,13 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Edge 114+](https://img.shields.io/badge/Edge-114%2B-blue)](https://www.microsoft.com/edge)
-[![Version](https://img.shields.io/badge/version-2.1.2-success)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-2.1.3-success)](extension/manifest.json)
 
 <p align="center">
-  <img src="docs/screenshot-panel.png" width="300" alt="DSH 側邊欄：讀頁、截圖、收件匣、DSH 對話">
-  &nbsp;&nbsp;
-  <img src="docs/screenshot-popup.png" width="210" alt="DSH Edge Assistant popup">
+  <img src="docs/demo.gif" width="300" alt="DSH Edge Assistant demo">
 </p>
+
+> 側邊欄：讀頁／截圖／收件匣／DSH 對話　·　popup：連線狀態與 cookie 同步
 
 把 Edge 接到 DeepSeek Harness：不只匯出 cookie，還能讓我**讀頁面、截圖、操作瀏覽器、
 管理分頁、查歷史書籤下載**。v2.1 起補上 Kimi 瀏覽器擴充同等級的能力：CDP 真實點擊／
@@ -213,7 +213,8 @@ DSH  Edge 助手                    ●   ← 綠=已連 bridge / 灰=未連線
 側邊欄（popup 按「開啟側邊欄」）多了一個「DSH 對話」區塊：
 
 - 可以直接對**最近有活動的會話**（＝你正在看的這個）下指令
-- 我的回覆會在那裡**逐字出現**（串流）
+- 我的回覆會出現在那裡：目前是**一段一段**（每個 step 完成時推送），
+  逐字串流（`agent/assistant-stream`）尚未啟用，列在下方 Known limitations
 - 你在 GUI 打的訊息也會同步過來
 
 它靠本地插件 `dsh-browser-chat`（`dsh-plugin/`，只綁 `127.0.0.1:8766`）：
@@ -227,6 +228,29 @@ curl http://127.0.0.1:8766/sessions
 
 > 側邊欄送出的訊息會真的進入會話（等於你多了一個輸入端）。
 > 改插件程式碼後要**重啟 DSH** 才會載入新版；只重載擴充不會影響插件。
+
+### 發佈 npm（給其他人用 plugin_manager 安裝）
+
+`dsh-plugin/` 目前用 `@local/dsh-browser-chat`（本機 link 安裝，`pnpm pack` 產出約 4.8 KB）。
+要放到 npm 給別人裝：
+
+1. 改 `dsh-plugin/package.json`：`"name": "@你的scope/dsh-browser-chat"`、拿掉 `"private": true`
+2. 同步改 `dsh-plugin/cordis.patch.yml` 的 `name`
+3. `cd dsh-plugin && npm publish --access public`（需先 `npm login`）
+4. 使用者安裝：`plugin_manager install_bundle @你的scope/dsh-browser-chat`
+
+> CI 不會自動發佈 npm（避免需要 `NPM_TOKEN`）；要自動化可另加 workflow。
+
+## Known limitations
+
+- **逐字串流**：側邊欄目前每個 step 完成才更新（`agent/assistant-stream` 是
+  agent-scoped 事件，一般 plugin context 收不到；要走 `sessionController.follow`
+  才能逐字）
+- **Instagram / TikTok**：需要你的 Edge 先登入；且這兩個平台沒有公開 feed 可自動挖連結，
+  要給具體貼文/影片網址
+- **`page.eval`**：嚴格 CSP 的網站（例如 Instagram）會擋 `unsafe-eval`；
+  讀取請改用 `read` / `controls` / `page.images`
+- **iframe**：`controls` 有涵蓋，但 `read` 只讀主頁面
 
 ## CLI 用法
 
