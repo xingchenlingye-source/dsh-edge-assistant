@@ -23,3 +23,6 @@ Thumbs.db
 # 本機設定
 .env
 *.local
+
+# 打包產物
+*.tgz
