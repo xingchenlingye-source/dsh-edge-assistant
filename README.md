@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Edge 114+](https://img.shields.io/badge/Edge-114%2B-blue)](https://www.microsoft.com/edge)
-[![Version](https://img.shields.io/badge/version-2.1.3-success)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-2.1.4-success)](extension/manifest.json)
 
 <p align="center">
   <img src="docs/demo.gif" width="300" alt="DSH Edge Assistant demo">
@@ -208,17 +208,18 @@ DSH  Edge 助手                    ●   ← 綠=已連 bridge / 灰=未連線
 | ⚪ 灰 | 未連線 | 跑 `server\ensure-bridge.ps1`（沒跑就背景起來）；平常靠 `install-autostart.ps1` 就不會再遇到 |
 | 底部「bridge: 未連線」 | HTTP 也連不到 | 確認 bridge 有在跑、8765 沒被占用 |
 
-## 側邊欄 DSH 對話（v2.1.2）
+## 側邊欄 DSH 對話（v2.1.4）
 
 側邊欄（popup 按「開啟側邊欄」）多了一個「DSH 對話」區塊：
 
 - 可以直接對**最近有活動的會話**（＝你正在看的這個）下指令
-- 我的回覆會出現在那裡：目前是**一段一段**（每個 step 完成時推送），
-  逐字串流（`agent/assistant-stream`）尚未啟用，列在下方 Known limitations
+- 我的回覆會**逐字出現**（v2.1.4 起走 `sessionController.follow` 的
+  assistant-stream frames，邊生成邊顯示；step 結束時用完整訊息覆蓋）
 - 你在 GUI 打的訊息也會同步過來
 
 它靠本地插件 `dsh-browser-chat`（`dsh-plugin/`，只綁 `127.0.0.1:8766`）：
-`sessionController.prompt` 送訊息、`session/event` 與 `agent/assistant-stream` 推回覆。
+`sessionController.prompt` 送訊息、`sessionController.follow` 串流回覆
+（歷史 snapshot + durable events + 逐字 frames 一次搞定）。
 
 ```powershell
 # 檢查插件是否活著
@@ -243,14 +244,13 @@ curl http://127.0.0.1:8766/sessions
 
 ## Known limitations
 
-- **逐字串流**：側邊欄目前每個 step 完成才更新（`agent/assistant-stream` 是
-  agent-scoped 事件，一般 plugin context 收不到；要走 `sessionController.follow`
-  才能逐字）
 - **Instagram / TikTok**：需要你的 Edge 先登入；且這兩個平台沒有公開 feed 可自動挖連結，
   要給具體貼文/影片網址
 - **`page.eval`**：嚴格 CSP 的網站（例如 Instagram）會擋 `unsafe-eval`；
   讀取請改用 `read` / `controls` / `page.images`
 - **iframe**：`controls` 有涵蓋，但 `read` 只讀主頁面
+- **逐字 vs 工具步驟**：純文字回覆會逐字；工具呼叫的 step 只有
+  `tool-call-delta`（不會在側邊欄逐字顯示參數）
 
 ## CLI 用法
 

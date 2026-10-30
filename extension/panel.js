@@ -195,8 +195,15 @@ function chatHandleEvent(m) {
     chatLast = null;
   } else if (m.role === "assistant") {
     if (m.text) {
-      chatBubble("assistant", m.text);
-      chatLast = null;
+      if (chatLast) {
+        // 串流氣泡已存在 → 用 final 文字覆蓋，避免重複
+        chatLast.textContent = m.text;
+        chatLast.dataset.streaming = "0";
+        chatLast = null;
+      } else {
+        chatBubble("assistant", m.text);
+        chatLast = null;
+      }
     }
   } else if (m.role === "tool") {
     chatBubble("tool", "🔧 " + (m.name || "tool"));
@@ -209,7 +216,10 @@ function chatHandleEvent(m) {
 
 function chatAppendDelta(text) {
   if (!text) return;
-  if (!chatLast) chatLast = chatBubble("assistant", "");
+  if (!chatLast) {
+    chatLast = chatBubble("assistant", "");
+    chatLast.dataset.streaming = "1";
+  }
   chatLast.textContent += text;
   const list = $("chatList");
   list.scrollTop = list.scrollHeight;
@@ -251,6 +261,9 @@ async function chatConnect() {
       try {
         chatAppendDelta(JSON.parse(e.data).text);
       } catch {}
+    });
+    chatES.addEventListener("delta-start", () => {
+      chatLast = null;
     });
   } catch (e) {
     setChatState("未連線（DSH 插件未啟動）", "off");

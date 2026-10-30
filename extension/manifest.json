@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DSH Edge Assistant — 瀏覽器接入 DeepSeek Harness",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "把 Edge 交給 agent：CDP 級點擊/打字/截圖、無障礙樹、滾動全文、網路與 Console、iframe、側邊欄、劃詞、錄製。只連本機 127.0.0.1。",
   "minimum_chrome_version": "116",
   "permissions": [

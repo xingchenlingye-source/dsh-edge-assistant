@@ -159,29 +159,11 @@ export function apply(ctx) {
     }
   });
 
-  /* ---------- 會話事件 → SSE ---------- */
-
-  ctx.on('session/event', (session, event) => {
-    if (!session || !event || !event.type) return;
-    const sessionId = String(session.id);
-    if (SURFACE_TYPES.has(event.type)) {
-      const simple = toSimple(event);
-      if (simple) broadcast(sessionId, 'event', simple);
-    }
-  });
-
-  // 逐字串流（process-local）；給側邊欄做打字效果
-  ctx.on('agent/assistant-stream', (payload) => {
-    const agent = payload && payload.agent;
-    const frame = payload && payload.frame;
-    if (!agent || !frame || frame.type !== 'chunk') return;
-    const chunk = frame.chunk || {};
-    if (chunk.type === 'text-delta' && typeof chunk.text === 'string') {
-      broadcast(String(agent.id), 'delta', { text: chunk.text });
-    }
-  });
-
   /* ---------- 會話查詢 ---------- */
+
+  // 註：不再用 ctx.on('session/event') / 'agent/assistant-stream' —
+  // 後者是 agent-scoped 事件，一般 plugin context 收不到。
+  // 歷史與逐字統一由 /events 的 sessionController.follow() 提供。
 
   const timeout = (ms) => {
     try {
@@ -228,18 +210,6 @@ export function apply(ctx) {
     return { sessionId: activeSessionId, updatedAt: activeUpdatedAt };
   }
 
-  async function snapshotEvents(sessionId) {
-    try {
-      const live = ctx.sessions.get(sessionId);
-      if (live) return live.snapshotEvents();
-      const inspected = await ctx.sessionController.inspect(sessionId, timeout(8000));
-      return (inspected && inspected.events) || [];
-    } catch (e) {
-      warn('[browser-chat] snapshot failed:', String(e && e.message ? e.message : e));
-      return [];
-    }
-  }
-
   /* ---------- HTTP 路由 ---------- */
 
   const server = http.createServer(async (req, res) => {
@@ -262,7 +232,7 @@ export function apply(ctx) {
         return sendJson(res, {
           ok: true,
           service: 'browser-chat',
-          version: '1.0.1',
+          version: '1.1.0',
           port,
           active: activeSessionId,
           clients: clients.size,
@@ -310,19 +280,10 @@ export function apply(ctx) {
       'Access-Control-Allow-Origin': '*',
     });
     res.write('retry: 2000\n\n');
+
     const client = { res, sessionId: String(sessionId) };
     clients.add(client);
-
-    const events = await snapshotEvents(sessionId);
-    const surface = events.filter((e) => e && SURFACE_TYPES.has(e.type)).slice(-HISTORY_LIMIT);
-    const messages = surface.map(toSimple).filter(Boolean);
-    const lastSeq = events.length ? events[events.length - 1].seq : 0;
-    send(client, 'snapshot', {
-      sessionId: String(sessionId),
-      cursor: lastSeq,
-      messages,
-    });
-
+    const ac = new AbortController();
     const heartbeat = setInterval(() => {
       try {
         res.write(': ping\n\n');
@@ -331,9 +292,70 @@ export function apply(ctx) {
     const close = () => {
       clearInterval(heartbeat);
       clients.delete(client);
+      try {
+        ac.abort();
+      } catch {}
     };
     req.on('close', close);
     req.on('error', close);
+
+    try {
+      // follow：一份 opening snapshot + 之後無縫的 durable events +
+      // cursorless assistant-stream frames（逐字）。
+      const stream = ctx.sessionController.follow(
+        {
+          address: { kind: 'session', sessionId: String(sessionId) },
+          assistantStream: true,
+          maxMessages: HISTORY_LIMIT,
+        },
+        ac.signal
+      );
+      for await (const frame of stream) {
+        if (!frame || !frame.type) continue;
+        if (frame.type === 'snapshot') {
+          const records = (frame.records || []).filter(
+            (r) => r && r.type === 'event' && r.event
+          );
+          const messages = records
+            .map((r) => toSimple(r.event))
+            .filter(Boolean)
+            .slice(-HISTORY_LIMIT);
+          send(client, 'snapshot', {
+            sessionId: String(sessionId),
+            cursor: frame.cursor,
+            messages,
+          });
+        } else if (frame.type === 'event') {
+          const simple = toSimple(frame.event);
+          if (simple) send(client, 'event', simple);
+        } else if (frame.type === 'assistant-stream') {
+          const f = frame.frame;
+          if (!f) continue;
+          if (f.type === 'start') {
+            send(client, 'delta-start', {
+              turn: f.turn,
+              step: f.step,
+              attemptId: String(f.attemptId),
+            });
+          } else if (f.type === 'chunk') {
+            const chunk = f.chunk || {};
+            if (chunk.type === 'text-delta' && typeof chunk.text === 'string') {
+              send(client, 'delta', { text: chunk.text });
+            }
+          } else if (f.type === 'end') {
+            send(client, 'delta-end', {
+              kind: (f.outcome && f.outcome.kind) || 'end',
+            });
+          }
+        }
+      }
+    } catch (e) {
+      if (!ac.signal.aborted) {
+        send(client, 'error', { error: String((e && e.message) || e) });
+      }
+    } finally {
+      close();
+    }
   }
 
   async function handlePrompt(req, res) {
