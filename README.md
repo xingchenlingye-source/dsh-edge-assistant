@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Edge 114+](https://img.shields.io/badge/Edge-114%2B-blue)](https://www.microsoft.com/edge)
-[![Version](https://img.shields.io/badge/version-2.1.4-success)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-2.1.5-success)](extension/manifest.json)
 
 <p align="center">
   <img src="docs/demo.gif" width="300" alt="DSH Edge Assistant demo">
@@ -94,6 +94,10 @@ python server\bridge_server.py
   `Input.dispatchMouseEvent` / `Input.dispatchKeyEvent`，React / Vue 這類
   受控元件也點得動、打得進去（舊的 DOM click 仍可用 `--dom` 退回）。
 - **元素截圖與整頁截圖**：`shot --selector` / `shot --full`。
+- **截圖標記**（v2.1.5）：`shot --marks "x,y;x,y:標籤"` 會在截圖上畫紅圈，
+  方便驗證「點在哪、有沒有點對」。
+- **API 回應內容**（v2.1.5）：`network body --request-id <id>` 取 response body
+  （JSON／HTML／JS 都行），看後端回傳什麼。
 - **無障礙樹與可點元素清單**：`ax`（頁面結構）、`controls`（可互動元素 +
   穩定 selector + 座標），對純文字 agent 特別有用。
 - **滾動全文**：`read` 處理延遲載入、無限捲動、內部滾動容器、shadow DOM，
@@ -293,6 +297,7 @@ python $cli waitfor --text "載入完成"
 python $cli waitfor --network-idle
 python $cli shot --selector ".card" --out card.png   # 元素截圖
 python $cli shot --full --out full.png               # 整頁截圖
+python $cli shot --marks "320,180;500,420:送出"      # 截圖 + 紅圈標記（v2.1.5）
 python $cli click "#submit"            # CDP 真實滑鼠（預設）
 python $cli click "#submit" --dom      # 退回舊的 DOM click
 python $cli type "#q" "hello" --submit --delay 30    # CDP 鍵盤輸入
@@ -302,6 +307,7 @@ python $cli select "#city" "台北"
 python $cli click "#inside" --frame 3  # iframe 內元素（frameId 由 controls 查）
 python $cli network start              # 開始記錄請求
 python $cli network list --max 30
+python $cli network body --request-id 12345.67   # 取 API 回應內容（v2.1.5）
 python $cli console get --max 30
 python $cli dialog accept --text "確定"
 python $cli pdf --out page.pdf

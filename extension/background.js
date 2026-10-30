@@ -8,7 +8,7 @@
 
 const BRIDGE_HTTP = "http://127.0.0.1:8765";
 const BRIDGE_WS = "ws://127.0.0.1:8765/ws";
-const VERSION = "2.1.4";
+const VERSION = "2.1.5";
 const PING_MS = 20000;
 
 /* ================= 狀態 ================= */
@@ -77,6 +77,54 @@ async function execInFrame(tabId, frameId, func, args) {
     world: "ISOLATED",
   });
   return res ? res.result : null;
+}
+
+// 截圖前在頁面畫「點擊標記」（紅圈 + 標籤），截完移除
+async function injectMarks(tabId, marks) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    func: (marks) => {
+      const old = document.getElementById("__dsh_marks");
+      if (old) old.remove();
+      const wrap = document.createElement("div");
+      wrap.id = "__dsh_marks";
+      wrap.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:2147483647";
+      for (const m of marks) {
+        const x = Number(m && m.x);
+        const y = Number(m && m.y);
+        if (!isFinite(x) || !isFinite(y)) continue;
+        const d = document.createElement("div");
+        d.style.cssText =
+          "position:fixed;left:" + (x - 22) + "px;top:" + (y - 22) +
+          "px;width:44px;height:44px;border:3px solid #ff3355;border-radius:50%;" +
+          "box-sizing:border-box;box-shadow:0 0 0 2px rgba(255,255,255,.85)";
+        wrap.appendChild(d);
+        if (m.label) {
+          const s = document.createElement("div");
+          s.textContent = String(m.label);
+          s.style.cssText =
+            "position:fixed;left:" + (x + 28) + "px;top:" + (y - 14) +
+            "px;color:#fff;background:#ff3355;font:12px/1.4 sans-serif;" +
+            "padding:1px 6px;border-radius:4px;white-space:nowrap";
+          wrap.appendChild(s);
+        }
+      }
+      document.documentElement.appendChild(wrap);
+    },
+    args: [marks],
+  });
+}
+
+async function clearMarks(tabId) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        const el = document.getElementById("__dsh_marks");
+        if (el) el.remove();
+      },
+    });
+  } catch {}
 }
 
 function jsonSafe(v) {
@@ -1157,8 +1205,20 @@ async function run(method, args) {
       await chrome.tabs.update(t.id, { active: true });
       await chrome.windows.update(t.windowId, { focused: true });
       await sleep(250);
-      const dataUrl = await chrome.tabs.captureVisibleTab(t.windowId, { format, quality });
-      return { tabId: t.id, url: t.url, dataUrl };
+      let marked = false;
+      if (Array.isArray(args.marks) && args.marks.length) {
+        try {
+          await injectMarks(t.id, args.marks);
+          marked = true;
+          await sleep(150);
+        } catch {}
+      }
+      try {
+        const dataUrl = await chrome.tabs.captureVisibleTab(t.windowId, { format, quality });
+        return { tabId: t.id, url: t.url, dataUrl, marked };
+      } finally {
+        if (marked) await clearMarks(t.id);
+      }
     }
 
     case "page.wait": {
@@ -1334,6 +1394,40 @@ async function run(method, args) {
       s.inflight = 0;
       cdpRelease(t.id);
       return { tabId: t.id, stopped: true };
+    }
+
+    case "network.body": {
+      const t = await tabById(args.tabId);
+      const s = netState(t.id);
+      if (!s.on) throw new Error("network 未開始收集（先跑 network.start）");
+      const requestId = String(args.requestId || "");
+      if (!requestId) throw new Error("需要 requestId（先用 network list 查 id）");
+      const it = netItem(t.id, requestId);
+      if (!it) throw new Error("收集清單裡沒有這個 requestId");
+      await cdpEnable(t.id, "Network", {}, true);
+      let r;
+      try {
+        r = await cdpSend(t.id, "Network.getResponseBody", { requestId });
+      } catch (e) {
+        throw new Error(
+          "取 body 失敗（請求可能來自舊的 CDP session，重新 network.start 後再試）: " +
+            (e && e.message ? e.message : e)
+        );
+      }
+      const maxBytes = Math.min(Number(args.maxBytes) || 65536, 1048576);
+      const body = String((r && r.body) || "");
+      const truncated = body.length > maxBytes;
+      return {
+        tabId: t.id,
+        requestId,
+        url: it.url,
+        status: it.status,
+        mimeType: it.mimeType,
+        base64Encoded: !!(r && r.base64Encoded),
+        bytes: body.length,
+        truncated,
+        body: truncated ? body.slice(0, maxBytes) : body,
+      };
     }
 
     case "console.start": {

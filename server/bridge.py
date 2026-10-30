@@ -336,6 +336,7 @@ def main():
     p.add_argument("--format", choices=["png", "jpeg"], default="png")
     p.add_argument("--selector", default=None, help="只截這個元素")
     p.add_argument("--full", action="store_true", help="整頁截圖（不限視窗）")
+    p.add_argument("--marks", default=None, help='標記點擊位置："x,y;x,y" 或 "x,y:標籤;..."')
     p.add_argument("--tab", type=int, default=None)
 
     p = sub.add_parser("click")
@@ -431,8 +432,10 @@ def main():
     p.add_argument("--tab", type=int, default=None)
 
     p = sub.add_parser("network")
-    p.add_argument("action", nargs="?", default="list", choices=["start", "list", "clear", "stop"])
+    p.add_argument("action", nargs="?", default="list", choices=["start", "list", "clear", "stop", "body"])
     p.add_argument("--max", type=int, default=50)
+    p.add_argument("--request-id", default=None, dest="request_id", help="network body 用：請求 id")
+    p.add_argument("--max-bytes", type=int, default=65536, dest="max_bytes")
     p.add_argument("--tab", type=int, default=None)
 
     p = sub.add_parser("console")
@@ -536,6 +539,23 @@ def main():
             extra["selector"] = args.selector
         if args.full:
             extra["fullPage"] = True
+        if args.marks:
+            marks = []
+            for part in str(args.marks).split(";"):
+                part = part.strip()
+                if not part:
+                    continue
+                label = ""
+                coord = part
+                if ":" in part:
+                    coord, label = part.split(":", 1)
+                try:
+                    x, y = [float(v) for v in coord.split(",")]
+                except Exception:
+                    continue
+                marks.append({"x": x, "y": y, "label": label.strip()})
+            if marks:
+                extra["marks"] = marks
         data = cmd("page.screenshot", with_tab(args, extra), timeout=60)
         path = data.get("path")
         print("screenshot saved at bridge:", path, "bytes:", data.get("bytes"))
@@ -730,6 +750,17 @@ def main():
             dump(cmd("network.list", with_tab(args, {"max": args.max})))
         elif args.action == "clear":
             dump(cmd("network.clear", with_tab(args)))
+        elif args.action == "body":
+            if not args.request_id:
+                print("需要 --request-id（先用 network list 查 id）", file=sys.stderr)
+                sys.exit(2)
+            dump(
+                cmd(
+                    "network.body",
+                    with_tab(args, {"requestId": args.request_id, "maxBytes": args.max_bytes}),
+                    timeout=60,
+                )
+            )
         else:
             dump(cmd("network.stop", with_tab(args)))
         return
