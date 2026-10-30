@@ -1,9 +1,15 @@
 {
-  "name": "@local/dsh-browser-chat",
-  "version": "1.0.0",
-  "private": true,
+  "name": "dsh-browser-chat",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Local HTTP/SSE bridge: let the Edge sidebar talk to a DSH session.",
+  "description": "Bridge a DeepSeek Harness session to the browser sidebar: HTTP + SSE, prompt/cancel, streaming replies.",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "browser",
+    "sidebar",
+    "sse"
+  ],
   "exports": {
     ".": "./index.js",
     "./locale/*.json": "./locale/*.json",

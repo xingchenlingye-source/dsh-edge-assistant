@@ -14,6 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pack DSH plugin bundle
+        run: npm pack ./dsh-plugin --pack-destination .
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -21,3 +28,8 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             --title "${GITHUB_REF_NAME}" \
             --generate-notes
+
+      - name: Upload plugin tarball
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" ./*.tgz --clobber

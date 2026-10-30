@@ -234,17 +234,20 @@ curl http://127.0.0.1:8766/sessions
 > 側邊欄送出的訊息會真的進入會話（等於你多了一個輸入端）。
 > 改插件程式碼後要**重啟 DSH** 才會載入新版；只重載擴充不會影響插件。
 
-### 發佈 npm（給其他人用 plugin_manager 安裝）
+### 發佈 bundle（GitHub Release）
 
-`dsh-plugin/` 目前用 `@local/dsh-browser-chat`（本機 link 安裝，`pnpm pack` 產出約 4.8 KB）。
-要放到 npm 給別人裝：
+打 `v*` tag 時，`.github/workflows/release.yml` 會自動把 `dsh-plugin/` 打包成
+`dsh-browser-chat-<version>.tgz` 附在 Release 上（不需 npm 帳號）。
 
-1. 改 `dsh-plugin/package.json`：`"name": "@你的scope/dsh-browser-chat"`、拿掉 `"private": true`
-2. 同步改 `dsh-plugin/cordis.patch.yml` 的 `name`
-3. `cd dsh-plugin && npm publish --access public`（需先 `npm login`）
-4. 使用者安裝：`plugin_manager install_bundle @你的scope/dsh-browser-chat`
+安裝給其他人：
 
-> CI 不會自動發佈 npm（避免需要 `NPM_TOKEN`）；要自動化可另加 workflow。
+1. 到 [Releases](https://github.com/xingchenlingye-source/dsh-edge-assistant/releases)
+   下載 `dsh-browser-chat-*.tgz`
+2. `plugin_manager install_bundle <tgz 下載路徑>`
+3. 側邊欄「DSH 對話」就會亮
+
+> npm registry 發佈需要帳號的 2FA/OTP（`npm publish` 會要求），所以本專案改走
+> GitHub Release 的 tarball；要發 npm 就照標準流程 `npm publish`（需 OTP）。
 
 ## Known limitations
 
