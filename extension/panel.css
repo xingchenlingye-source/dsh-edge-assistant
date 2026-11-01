@@ -368,8 +368,10 @@ button:hover:not(:disabled) {
 }
 
 .chatmsg.assistant .avatar {
-  background: linear-gradient(135deg, #5c7cfa, #7c6cf6);
-  color: #fff;
+  background: url("icons/avatar-dsh.png") center/cover no-repeat;
+  color: transparent;
+  font-size: 0;
+  border-radius: 50%;
   box-shadow: 0 2px 8px rgba(92, 124, 250, 0.35);
 }
 
