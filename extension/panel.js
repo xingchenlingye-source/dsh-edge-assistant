@@ -163,6 +163,8 @@ const CHAT_BASE = "http://127.0.0.1:8766";
 const NO_AUTOSCROLL = location.search.includes("noauto");
 let chatES = null;
 let chatSessionId = null;
+let chatFixed = true; // true = 連到「DSH Edge Assistant」固定會話
+let chatTitle = null;
 let chatLast = null; // 目前正在串流的 assistant 氣泡
 
 function setChatState(text, cls) {
@@ -256,8 +258,10 @@ async function chatConnect() {
     if (!h || !h.ok) throw new Error("offline");
     const cur = await fetch(CHAT_BASE + "/current").then((r) => r.json());
     chatSessionId = cur.sessionId;
+    chatFixed = cur.fixed !== false;
+    chatTitle = cur.title || null;
     if (!chatSessionId) {
-      setChatState("找不到會話", "off");
+      setChatState("找不到「DSH Edge Assistant」會話", "off");
       return;
     }
     if (chatES) chatES.close();
@@ -274,7 +278,12 @@ async function chatConnect() {
         chatClear();
         (d.messages || []).forEach(chatHandleEvent);
         chatLast = null;
-        setChatState("已連線 · " + String(d.sessionId || "").slice(0, 14), "on");
+        setChatState(
+          chatFixed
+            ? "已連線 · " + String(d.sessionId || "").slice(0, 14)
+            : "⚠ 非主會話：" + (chatTitle || "最近活動"),
+          chatFixed ? "on" : "off"
+        );
       } catch {}
     });
     chatES.addEventListener("event", (e) => {

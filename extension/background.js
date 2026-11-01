@@ -8,7 +8,7 @@
 
 const BRIDGE_HTTP = "http://127.0.0.1:8765";
 const BRIDGE_WS = "ws://127.0.0.1:8765/ws";
-const VERSION = "2.1.8";
+const VERSION = "2.1.9";
 const PING_MS = 20000;
 
 /* ================= 狀態 ================= */

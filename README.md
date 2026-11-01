@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Edge 114+](https://img.shields.io/badge/Edge-114%2B-blue)](https://www.microsoft.com/edge)
-[![Version](https://img.shields.io/badge/version-2.1.8-success)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-2.1.9-success)](extension/manifest.json)
 
 <p align="center">
   <img src="docs/demo.gif" width="300" alt="DSH Edge Assistant demo">
@@ -212,11 +212,13 @@ DSH  Edge 助手                    ●   ← 綠=已連 bridge / 灰=未連線
 | ⚪ 灰 | 未連線 | 跑 `server\ensure-bridge.ps1`（沒跑就背景起來）；平常靠 `install-autostart.ps1` 就不會再遇到 |
 | 底部「bridge: 未連線」 | HTTP 也連不到 | 確認 bridge 有在跑、8765 沒被占用 |
 
-## 側邊欄 DSH 對話（v2.1.4）
+## 側邊欄 DSH 對話（v2.1.9）
 
 側邊欄（popup 按「開啟側邊欄」）多了一個「DSH 對話」區塊：
 
-- 可以直接對**最近有活動的會話**（＝你正在看的這個）下指令
+- **固定連到標題為「DSH Edge Assistant」的會話**（v2.1.9 起）；即使你切去別的
+  會話工作，側邊欄也不會跟著跳走。找不到該會話時才退回最近活動會話，
+  並在狀態列顯示 `⚠ 非主會話`。
 - 我的回覆會**逐字出現**（v2.1.4 起走 `sessionController.follow` 的
   assistant-stream frames，邊生成邊顯示；step 結束時用完整訊息覆蓋）
 - 你在 GUI 打的訊息也會同步過來

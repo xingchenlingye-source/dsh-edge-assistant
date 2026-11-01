@@ -27,6 +27,9 @@ const SURFACE_TYPES = new Set([
   'turn/end',
 ]);
 const HISTORY_LIMIT = 60;
+// 側邊欄固定連到這個標題的會話；找不到才退回最近活動會話
+const FIXED_TITLE = 'DSH Edge Assistant';
+const PLUGIN_VERSION = '1.1.2';
 
 function textOf(message) {
   if (!message) return '';
@@ -193,6 +196,24 @@ export function apply(ctx) {
   }
 
   async function currentSession() {
+    // 1) 固定連到標題為 FIXED_TITLE 的會話（= 側邊欄專用會話）
+    try {
+      const items = await listSessions();
+      const hit = items.find((s) => String(s.title || '').trim() === FIXED_TITLE);
+      if (hit) {
+        activeSessionId = hit.sessionId;
+        activeUpdatedAt = hit.updatedAt;
+        return {
+          sessionId: activeSessionId,
+          updatedAt: activeUpdatedAt,
+          fixed: true,
+          title: hit.title,
+        };
+      }
+    } catch (e) {
+      warn('[browser-chat] list sessions failed:', String(e && e.message ? e.message : e));
+    }
+    // 2) 找不到才退回「最近活動會話」（並標記 fixed=false，前端會提示）
     if (!activeSessionId) {
       try {
         const items = await listSessions();
@@ -206,7 +227,12 @@ export function apply(ctx) {
         warn('[browser-chat] list sessions failed:', String(e && e.message ? e.message : e));
       }
     }
-    return { sessionId: activeSessionId, updatedAt: activeUpdatedAt };
+    return {
+      sessionId: activeSessionId,
+      updatedAt: activeUpdatedAt,
+      fixed: false,
+      title: null,
+    };
   }
 
   /* ---------- HTTP 路由 ---------- */
@@ -231,7 +257,7 @@ export function apply(ctx) {
         return sendJson(res, {
           ok: true,
           service: 'browser-chat',
-          version: '1.1.0',
+          version: PLUGIN_VERSION,
           port,
           active: activeSessionId,
           clients: clients.size,
