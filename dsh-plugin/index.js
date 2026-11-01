@@ -29,7 +29,10 @@ const SURFACE_TYPES = new Set([
 const HISTORY_LIMIT = 60;
 // 側邊欄固定連到這個標題的會話；找不到才退回最近活動會話
 const FIXED_TITLE = 'DSH Edge Assistant';
-const PLUGIN_VERSION = '1.1.2';
+// 側邊欄鎖定的主會話 id（可用環境變數 DSH_BROWSER_CHAT_SESSION 覆寫）
+const FIXED_SESSION_ID =
+  process.env.DSH_BROWSER_CHAT_SESSION || 'session-cb0d5ce3-a087-4308-b0e9-3935e17b17d1';
+const PLUGIN_VERSION = '1.1.3';
 
 function textOf(message) {
   if (!message) return '';
@@ -196,24 +199,38 @@ export function apply(ctx) {
   }
 
   async function currentSession() {
-    // 1) 固定連到標題為 FIXED_TITLE 的會話（= 側邊欄專用會話）
+    // 1) 固定 session id（最優先；標題改了也不影響）
+    // 2) 找不到 id → 找標題「DSH Edge Assistant」
+    // 3) 都沒有 → 退回最近活動會話（fixed=false，前端會提示）
     try {
       const items = await listSessions();
-      const hit = items.find((s) => String(s.title || '').trim() === FIXED_TITLE);
-      if (hit) {
-        activeSessionId = hit.sessionId;
-        activeUpdatedAt = hit.updatedAt;
+      const byId = items.find((s) => s.sessionId === FIXED_SESSION_ID);
+      if (byId) {
+        activeSessionId = byId.sessionId;
+        activeUpdatedAt = byId.updatedAt;
         return {
-          sessionId: activeSessionId,
-          updatedAt: activeUpdatedAt,
+          sessionId: byId.sessionId,
+          updatedAt: byId.updatedAt,
           fixed: true,
-          title: hit.title,
+          matched: 'id',
+          title: byId.title,
+        };
+      }
+      const byTitle = items.find((s) => String(s.title || '').trim() === FIXED_TITLE);
+      if (byTitle) {
+        activeSessionId = byTitle.sessionId;
+        activeUpdatedAt = byTitle.updatedAt;
+        return {
+          sessionId: byTitle.sessionId,
+          updatedAt: byTitle.updatedAt,
+          fixed: true,
+          matched: 'title',
+          title: byTitle.title,
         };
       }
     } catch (e) {
       warn('[browser-chat] list sessions failed:', String(e && e.message ? e.message : e));
     }
-    // 2) 找不到才退回「最近活動會話」（並標記 fixed=false，前端會提示）
     if (!activeSessionId) {
       try {
         const items = await listSessions();
@@ -231,6 +248,7 @@ export function apply(ctx) {
       sessionId: activeSessionId,
       updatedAt: activeUpdatedAt,
       fixed: false,
+      matched: 'activity',
       title: null,
     };
   }

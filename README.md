@@ -212,13 +212,15 @@ DSH  Edge 助手                    ●   ← 綠=已連 bridge / 灰=未連線
 | ⚪ 灰 | 未連線 | 跑 `server\ensure-bridge.ps1`（沒跑就背景起來）；平常靠 `install-autostart.ps1` 就不會再遇到 |
 | 底部「bridge: 未連線」 | HTTP 也連不到 | 確認 bridge 有在跑、8765 沒被占用 |
 
-## 側邊欄 DSH 對話（v2.1.9）
+## 側邊欄 DSH 對話（v2.1.10）
 
 側邊欄（popup 按「開啟側邊欄」）多了一個「DSH 對話」區塊：
 
-- **固定連到標題為「DSH Edge Assistant」的會話**（v2.1.9 起）；即使你切去別的
-  會話工作，側邊欄也不會跟著跳走。找不到該會話時才退回最近活動會話，
-  並在狀態列顯示 `⚠ 非主會話`。
+- **鎖定固定會話 id**（v2.1.10 起）：`session-cb0d5ce3-a087-4308-b0e9-3935e17b17d1`。
+  即使你在 GUI 切去別的會話工作、或把會話改名，側邊欄都不會跟著跳走。
+  - 該 id 不存在時 → 退回用標題「DSH Edge Assistant」比對
+  - 再找不到 → 才用最近活動會話，並在狀態列顯示 `⚠ 非主會話`
+  - 想改鎖定對象：設環境變數 `DSH_BROWSER_CHAT_SESSION=<sessionId>`
 - 我的回覆會**逐字出現**（v2.1.4 起走 `sessionController.follow` 的
   assistant-stream frames，邊生成邊顯示；step 結束時用完整訊息覆蓋）
 - 你在 GUI 打的訊息也會同步過來
