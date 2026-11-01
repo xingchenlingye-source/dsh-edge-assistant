@@ -1,6 +1,6 @@
 {
   "name": "dsh-browser-chat",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "Bridge a DeepSeek Harness session to the browser sidebar: HTTP + SSE, prompt/cancel, streaming replies.",
   "keywords": [

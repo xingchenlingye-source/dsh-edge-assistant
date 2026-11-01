@@ -160,6 +160,7 @@ $("control").addEventListener("change", async () => {
 /* ================= DSH 對話（走 dsh-browser-chat 插件的 127.0.0.1:8766） ================= */
 
 const CHAT_BASE = "http://127.0.0.1:8766";
+const NO_AUTOSCROLL = location.search.includes("noauto");
 let chatES = null;
 let chatSessionId = null;
 let chatLast = null; // 目前正在串流的 assistant 氣泡
@@ -174,9 +175,32 @@ function chatBubble(role, text) {
   const list = $("chatList");
   const el = document.createElement("div");
   el.className = "chatmsg " + role;
-  el.textContent = text || "";
+  const isMsg = role === "user" || role === "assistant";
+  if (isMsg) {
+    const av = document.createElement("span");
+    av.className = "avatar";
+    av.textContent = role === "user" ? "你" : "DSH";
+    el.appendChild(av);
+  }
+  const body = document.createElement("div");
+  body.className = "bubble";
+  const txt = document.createElement("span");
+  txt.className = "text";
+  txt.textContent = text || "";
+  body.appendChild(txt);
+  if (isMsg) {
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = new Date().toLocaleTimeString("zh-TW", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    body.appendChild(meta);
+  }
+  el.appendChild(body);
   list.appendChild(el);
-  list.scrollTop = list.scrollHeight;
+  if (!NO_AUTOSCROLL) list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
   return el;
 }
 
@@ -196,9 +220,9 @@ function chatHandleEvent(m) {
   } else if (m.role === "assistant") {
     if (m.text) {
       if (chatLast) {
-        // 串流氣泡已存在 → 用 final 文字覆蓋，避免重複
-        chatLast.textContent = m.text;
-        chatLast.dataset.streaming = "0";
+        const t = chatLast.querySelector(".text");
+        if (t) t.textContent = m.text;
+        chatLast.classList.remove("streaming");
         chatLast = null;
       } else {
         chatBubble("assistant", m.text);
@@ -218,9 +242,10 @@ function chatAppendDelta(text) {
   if (!text) return;
   if (!chatLast) {
     chatLast = chatBubble("assistant", "");
-    chatLast.dataset.streaming = "1";
+    chatLast.classList.add("streaming");
   }
-  chatLast.textContent += text;
+  const t = chatLast.querySelector(".text");
+  if (t) t.textContent += text;
   const list = $("chatList");
   list.scrollTop = list.scrollHeight;
 }
@@ -297,6 +322,12 @@ $("chatInput").addEventListener("keydown", (e) => {
     chatSend();
   }
 });
+function autoGrowChatInput() {
+  const input = $("chatInput");
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 140) + "px";
+}
+$("chatInput").addEventListener("input", autoGrowChatInput);
 
 chatConnect();
 setInterval(() => {

@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Edge 114+](https://img.shields.io/badge/Edge-114%2B-blue)](https://www.microsoft.com/edge)
-[![Version](https://img.shields.io/badge/version-2.1.5-success)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-2.1.7-success)](extension/manifest.json)
 
 <p align="center">
   <img src="docs/demo.gif" width="300" alt="DSH Edge Assistant demo">

@@ -30,25 +30,24 @@ const HISTORY_LIMIT = 60;
 
 function textOf(message) {
   if (!message) return '';
+  const blocks = message.content !== undefined ? message.content : message;
+  if (typeof blocks === 'string') return blocks;
+  if (!Array.isArray(blocks)) {
+    return blocks && typeof blocks.text === 'string' ? blocks.text : '';
+  }
   const parts = [];
-  const walk = (value) => {
-    if (value == null) return;
-    if (typeof value === 'string') {
-      if (value) parts.push(value);
-      return;
+  for (const block of blocks) {
+    if (!block) continue;
+    if (typeof block === 'string') {
+      parts.push(block);
+      continue;
     }
-    if (Array.isArray(value)) {
-      for (const item of value) walk(item);
-      return;
+    // 只取 text 區塊：reasoning（思考過程）與 tool-call 不該顯示在側邊欄
+    if (block.type === 'text' && typeof block.text === 'string') {
+      parts.push(block.text);
     }
-    if (typeof value === 'object') {
-      if (typeof value.text === 'string') parts.push(value.text);
-      else if (typeof value.value === 'string') parts.push(value.value);
-      else if (value.content !== undefined) walk(value.content);
-    }
-  };
-  walk(message.content !== undefined ? message.content : message);
-  return parts.join('');
+  }
+  return parts.join('\n');
 }
 
 function readJson(req) {
